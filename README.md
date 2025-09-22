@@ -1,6 +1,6 @@
 # NOMINATOR
 
-Aplicación de escritorio en Python para la gestión de nóminas, altas/bajas y generación de informes, con interfaz gráfica desarrollada en **Tkinter**.
+Aplicación de escritorio en Python para la gestión de nóminas, altas/bajas y generación de informes en formato PDF, con interfaz gráfica desarrollada en **Tkinter**.
 
 ---
 
