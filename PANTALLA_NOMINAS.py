@@ -2,61 +2,13 @@ from tkinter import *
 import sqlite3
 
 def ventana_nominas():
-    
-    def consultar_empleado():
-        try:
-            codigo_consulta = Entry_codigo_consulta.get()
-            conexion = sqlite3.connect("nominator.db")
-            cursor = conexion.cursor()
-
-            # Consultar los datos del empleado por código
-            cursor.execute("SELECT * FROM Empleados WHERE Codigo=?", (codigo_consulta,))
-            empleado = cursor.fetchone()
-
-            if empleado:
-                # Mostrar los datos del empleado en las entradas correspondientes
-                Entry_Nombre.set(empleado[1])
-                Entry_FechaInicio.set(empleado[2])
-                Entry_FechaFin.set(empleado[3])
-                Entry_Direccion.set(empleado[4])
-                Entry_Nif.set(empleado[5])
-                Entry_DatosBancarios.set(empleado[6])
-                Entry_NumeroAfiliado.set(empleado[7])
-                Entry_Irpf.set(empleado[8])
-                Entry_SegSocial.set(empleado[9])
-
-                mensaje_aviso.set("Datos del empleado encontrados.")
-            else:
-                mensaje_aviso.set("Empleado no encontrado.")
-                limpiar_campos()
-
-        except Exception as e:
-            mensaje_aviso.set(f"Error al consultar empleado: {str(e)}")
-
-        finally:
-            cursor.close()
-            conexion.close()
-
-
-    def limpiar_campos():
-        """Limpia todos los campos."""
-        Entry_Nombre.set("")
-        Entry_FechaInicio.set("")
-        Entry_FechaFin.set("")
-        Entry_Direccion.set("")
-        Entry_Nif.set("")
-        Entry_DatosBancarios.set("")
-        Entry_NumeroAfiliado.set("")
-        Entry_Irpf.set("")
-        Entry_SegSocial.set("")
-
-
-    # Configuración de la ventana principal
+    # ---- Ventana principal ----
     nominas = Tk()
-    nominas.title("Gestión de Empleados")
-    nominas.geometry("600x400")
+    nominas.title("Gestión de Nóminas")
+    nominas.geometry("800x700")
+    nominas.configure(bg="#f0f4f7")
 
-    # Variables asociadas a las entradas
+    # ---- VARIABLES ----
     Entry_codigo_consulta = StringVar()
     Entry_Nombre = StringVar()
     Entry_FechaInicio = StringVar()
@@ -69,46 +21,132 @@ def ventana_nominas():
     Entry_SegSocial = StringVar()
     mensaje_aviso = StringVar()
 
-    # Título
-    Label(nominas, text="Gestión de Empleados", font=("Arial", 14, "bold")).grid(row=0, column=0, columnspan=2, pady=10)
+    # ---- CABECERA ----
+    header = Frame(nominas, bg="#2c3e50", pady=15)
+    header.pack(fill="x")
 
-    # Campo de consulta
-    Label(nominas, text="Código de Empleado").grid(row=1, column=0, sticky=W, padx=10, pady=5)
-    Entry(nominas, textvariable=Entry_codigo_consulta).grid(row=1, column=1, padx=10, pady=5)
-    Button(nominas, text="Consultar", command=consultar_empleado).grid(row=1, column=2, padx=10, pady=5)
+    Label(header, text="GESTIÓN DE NÓMINAS",
+          font=('Helvetica', 20, 'bold'),
+          bg="#2c3e50", fg="white").pack(expand=True)  # centrado horizontal
 
-    # Datos del empleado
-    Label(nominas, text="Nombre").grid(row=2, column=0, sticky=W, padx=10, pady=5)
-    Entry(nominas, textvariable=Entry_Nombre, state="disabled").grid(row=2, column=1, columnspan=2, padx=10, pady=5, sticky=EW)
+    # ---- CANVAS SCROLLABLE ----
+    main_frame = Frame(nominas, bg="#f0f4f7")
+    main_frame.pack(fill=BOTH, expand=1)
 
-    Label(nominas, text="Fecha Inicio").grid(row=3, column=0, sticky=W, padx=10, pady=5)
-    Entry(nominas, textvariable=Entry_FechaInicio, state="disabled").grid(row=3, column=1, padx=10, pady=5)
+    canvas = Canvas(main_frame, bg="#f0f4f7", highlightthickness=0)
+    canvas.pack(side=LEFT, fill=BOTH, expand=1)
 
-    Label(nominas, text="Fecha Fin").grid(row=3, column=2, sticky=W, padx=10, pady=5)
-    Entry(nominas, textvariable=Entry_FechaFin, state="disabled").grid(row=3, column=3, padx=10, pady=5)
+    scrollbar = Scrollbar(main_frame, orient=VERTICAL, command=canvas.yview)
+    scrollbar.pack(side=RIGHT, fill=Y)
+    canvas.configure(yscrollcommand=scrollbar.set)
 
-    Label(nominas, text="Dirección").grid(row=4, column=0, sticky=W, padx=10, pady=5)
-    Entry(nominas, textvariable=Entry_Direccion, state="disabled").grid(row=4, column=1, columnspan=2, padx=10, pady=5, sticky=EW)
+    def on_mousewheel(event):
+        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+    canvas.bind_all("<MouseWheel>", on_mousewheel)
 
-    Label(nominas, text="NIF").grid(row=5, column=0, sticky=W, padx=10, pady=5)
-    Entry(nominas, textvariable=Entry_Nif, state="disabled").grid(row=5, column=1, padx=10, pady=5)
+    second_frame = Frame(canvas, bg="#f0f4f7")
+    canvas.create_window((0, 0), window=second_frame, anchor="nw")
 
-    Label(nominas, text="Datos Bancarios").grid(row=5, column=2, sticky=W, padx=10, pady=5)
-    Entry(nominas, textvariable=Entry_DatosBancarios, state="disabled").grid(row=5, column=3, padx=10, pady=5)
+    def update_scrollregion(event):
+        canvas.configure(scrollregion=canvas.bbox("all"))
+    second_frame.bind("<Configure>", update_scrollregion)
 
-    Label(nominas, text="Número Afiliación SS").grid(row=6, column=0, sticky=W, padx=10, pady=5)
-    Entry(nominas, textvariable=Entry_NumeroAfiliado, state="disabled").grid(row=6, column=1, columnspan=2, padx=10, pady=5, sticky=EW)
+    # ---- FUNCIONES ----
+    def consultar_empleado():
+        codigo_consulta = Entry_codigo_consulta.get().strip()
+        if not codigo_consulta:
+            mensaje_aviso.set("⚠️ El código de empleado es obligatorio.")
+            return
+        try:
+            conexion = sqlite3.connect("nominator.db")
+            cursor = conexion.cursor()
+            cursor.execute("SELECT * FROM empleados WHERE codigo=?", (codigo_consulta,))
+            empleado = cursor.fetchone()
+            if empleado:
+                Entry_Nombre.set(empleado[1])
+                Entry_FechaInicio.set(empleado[2])
+                Entry_FechaFin.set(empleado[3])
+                Entry_Direccion.set(empleado[4])
+                Entry_Nif.set(empleado[5])
+                Entry_DatosBancarios.set(empleado[6])
+                Entry_NumeroAfiliado.set(empleado[7])
+                Entry_Irpf.set(empleado[13])
+                Entry_SegSocial.set(empleado[16])
+                mensaje_aviso.set("✅ Empleado encontrado correctamente.")
+            else:
+                limpiar_campos()
+                mensaje_aviso.set("❌ Empleado no encontrado.")
+        except Exception as e:
+            mensaje_aviso.set(f"❌ Error: {e}")
+        finally:
+            cursor.close()
+            conexion.close()
 
-    Label(nominas, text="% IRPF").grid(row=7, column=0, sticky=W, padx=10, pady=5)
-    Entry(nominas, textvariable=Entry_Irpf, state="disabled").grid(row=7, column=1, padx=10, pady=5)
+    def limpiar_campos():
+        for var in [Entry_Nombre, Entry_FechaInicio, Entry_FechaFin, Entry_Direccion,
+                    Entry_Nif, Entry_DatosBancarios, Entry_NumeroAfiliado,
+                    Entry_Irpf, Entry_SegSocial]:
+            var.set("")
+        mensaje_aviso.set("")
 
-    Label(nominas, text="Seguridad Social").grid(row=7, column=2, sticky=W, padx=10, pady=5)
-    Entry(nominas, textvariable=Entry_SegSocial, state="disabled").grid(row=7, column=3, padx=10, pady=5)
+    # ---- SECCIÓN CONSULTA ----
+    frame_consulta = LabelFrame(second_frame, text="Consulta de Empleado",
+                                font=('Helvetica', 11, 'bold'),
+                                bg="#f0f4f7", fg="#2c3e50",
+                                padx=15, pady=10, labelanchor="n")
+    frame_consulta.pack(fill="x", padx=15, pady=10)
 
-    # Mensaje de aviso
-    Label(nominas, textvariable=mensaje_aviso, fg="red").grid(row=8, column=0, columnspan=4, pady=10,)
+    Label(frame_consulta, text="Código de Empleado:",
+          bg="#f0f4f7", fg="#2c3e50", font=('Helvetica', 10, 'bold')).grid(row=0, column=0, pady=5, sticky=W)
+    Entry(frame_consulta, textvariable=Entry_codigo_consulta,
+          font=('Helvetica', 10), width=25, relief="solid", bd=1).grid(row=0, column=1, padx=10, pady=5, sticky=W)
+    Button(frame_consulta, text="CONSULTAR", command=consultar_empleado,
+           bg="#3498db", fg="white", font=('Helvetica', 10, 'bold'),
+           activebackground="#2980b9", activeforeground="white",
+           relief="flat", width=15).grid(row=0, column=2, padx=10, pady=5)
 
-    # Botones de acción
-    Button(nominas, text="Limpiar", command=limpiar_campos).grid(row=9, column=1, pady=10)
-    Button(nominas, text="Salir", command=nominas.quit).grid(row=9, column=2, pady=10)
+    # ---- SECCIÓN DATOS ----
+    def crear_seccion(frame_padre, titulo, campos):
+        frame = LabelFrame(frame_padre, text=titulo, padx=15, pady=10,
+                           font=('Helvetica', 11, 'bold'), bg="#f0f4f7", fg="#2c3e50", labelanchor="n")
+        frame.pack(fill="both", expand="yes", padx=15, pady=5)
+        for i, (texto, variable) in enumerate(campos):
+            Label(frame, text=texto, bg="#f0f4f7", fg="#2c3e50",
+                  font=('Helvetica', 10, 'bold')).grid(row=i, column=0, sticky=W, pady=5, padx=5)
+            Entry(frame, textvariable=variable, font=('Helvetica', 10),
+                  width=40, justify="left", relief="solid", bd=1, state="readonly").grid(row=i, column=1, padx=10, pady=5, sticky=W)
+        return frame
+
+    crear_seccion(second_frame, "Datos del Empleado", [
+        ("Nombre", Entry_Nombre),
+        ("Fecha de Inicio", Entry_FechaInicio),
+        ("Fecha de Fin", Entry_FechaFin),
+        ("Dirección", Entry_Direccion),
+        ("NIF", Entry_Nif),
+        ("Datos Bancarios", Entry_DatosBancarios),
+        ("Nº Afiliación SS", Entry_NumeroAfiliado),
+        ("% IRPF", Entry_Irpf),
+        ("Seguridad Social", Entry_SegSocial)
+    ])
+
+    # ---- MENSAJES Y BOTONES ----
+    frame_botones = Frame(second_frame, pady=15, bg="#f0f4f7")
+    frame_botones.pack()
+    Label(frame_botones, textvariable=mensaje_aviso, fg="red",
+          bg="#f0f4f7", font=('Helvetica', 13, 'bold')).grid(row=0, column=0, columnspan=3, pady=10)
+
+    Button(frame_botones, text="LIMPIAR",
+           command=limpiar_campos, width=15,
+           bg="#e67e22", fg="white", font=('Helvetica', 11, 'bold'),
+           activebackground="#d35400", relief="flat").grid(row=1, column=0, padx=10, pady=10)
+
+    Button(frame_botones, text="SALIR",
+           command=nominas.destroy, width=15,
+           bg="#c0392b", fg="white", font=('Helvetica', 11, 'bold'),
+           activebackground="#922b21", relief="flat").grid(row=1, column=1, padx=10, pady=10)
+
     nominas.mainloop()
+
+
+if __name__ == "__main__":
+    ventana_nominas()
