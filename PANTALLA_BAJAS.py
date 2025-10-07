@@ -2,12 +2,11 @@ from tkinter import Tk, Label, Entry, Button, Frame
 import sqlite3
 from datetime import datetime
 
-
 def buscar_codigo(codigo_empleado):
     try:
         conexion = sqlite3.connect('nominator.db')
         cursor = conexion.cursor()
-        cursor.execute("SELECT * FROM Empleados WHERE Codigo = ?", (codigo_empleado,))
+        cursor.execute("SELECT * FROM empleados WHERE codigo = ?", (codigo_empleado,))
         resultado = cursor.fetchone()
         conexion.close()
         return resultado
@@ -15,31 +14,38 @@ def buscar_codigo(codigo_empleado):
         print(f"Error al buscar código: {str(e)}")
         return None
 
-
 def validar_fecha(fecha):
+    """
+    Valida que la fecha esté en formato dd-mm-YYYY y sea igual o posterior al día actual.
+    """
     try:
         fecha_obj = datetime.strptime(fecha, '%d-%m-%Y')
         return fecha_obj.date() >= datetime.now().date()
     except ValueError:
         return False
 
-
 def ejecutar_consulta(codigo_empleado, fecha_baja, label_mensaje):
     try:
         empleado_existente = buscar_codigo(codigo_empleado)
 
-        if empleado_existente:
-            if validar_fecha(fecha_baja):
-                conexion = sqlite3.connect('nominator.db')
-                cursor = conexion.cursor()
-                cursor.execute("UPDATE Empleados SET FechaFin = ? WHERE Codigo = ?", (fecha_baja, codigo_empleado))
-                conexion.commit()
-                conexion.close()
-                label_mensaje.config(text=f"✅ Fecha de baja actualizada para el código {codigo_empleado}", fg="green")
-            else:
-                label_mensaje.config(text="⚠️ La fecha de baja debe ser válida y posterior al día actual.", fg="red")
-        else:
-            label_mensaje.config(text=f"❌ El código {codigo_empleado} no existe en la base de datos.", fg="red")
+        if not empleado_existente:
+            label_mensaje.config(text=f"❌ El código {codigo_empleado} no existe.", fg="red")
+            return
+
+        if not validar_fecha(fecha_baja):
+            label_mensaje.config(text="⚠️ Fecha inválida. Formato: dd-mm-YYYY y posterior o igual al día actual.", fg="red")
+            return
+
+        # Convertir fecha al formato de la base de datos (ej. YYYY-MM-DD) si quieres consistencia
+        fecha_obj = datetime.strptime(fecha_baja, '%d-%m-%Y')
+        fecha_formato_db = fecha_obj.strftime('%Y-%m-%d')
+
+        conexion = sqlite3.connect('nominator.db')
+        cursor = conexion.cursor()
+        cursor.execute("UPDATE empleados SET fecha_fin = ? WHERE codigo = ?", (fecha_formato_db, codigo_empleado))
+        conexion.commit()
+        conexion.close()
+        label_mensaje.config(text=f"✅ Baja registrada para el código {codigo_empleado}", fg="green")
 
     except sqlite3.Error as e:
         label_mensaje.config(text=f"Error al actualizar la base de datos: {str(e)}", fg="red")
@@ -54,7 +60,6 @@ def ventana_bajas():
     # ---- ENCABEZADO ----
     header = Frame(ventana, bg="#2c3e50", pady=15)
     header.pack(fill="x")
-
     Label(header, text="REGISTRO DE BAJAS", font=('Helvetica', 20, 'bold'),
           bg="#2c3e50", fg="white").pack()
 
