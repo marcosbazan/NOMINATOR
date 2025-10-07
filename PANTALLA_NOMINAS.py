@@ -70,8 +70,8 @@ def ventana_nominas():
                 Entry_Nif.set(empleado[5])
                 Entry_DatosBancarios.set(empleado[6])
                 Entry_NumeroAfiliado.set(empleado[7])
-                Entry_Irpf.set(empleado[13])
-                Entry_SegSocial.set(empleado[16])
+                Entry_Irpf.set(str(empleado[8]))
+                Entry_SegSocial.set(str(empleado[9]))
                 mensaje_aviso.set("✅ Empleado encontrado correctamente.")
             else:
                 limpiar_campos()
