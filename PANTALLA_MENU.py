@@ -7,51 +7,67 @@ from PANTALLA_NOMINAS import *
 class Navegador:
     def __init__(self, window):
         self.wind = window
-        self.wind.title('Navegator')
-        self.wind.geometry('600x600')
+        self.wind.title('Gestión de Nóminas')
+        self.wind.geometry('650x650')
+        self.wind.configure(bg="#f0f4f7")  # Fondo suave
 
-        # Crear un contenedor para el texto
-        text_frame = Frame(self.wind, pady=20)  
-        text_frame.grid(row=0, column=0, columnspan=2, pady=120)
+        # ---- Encabezado ----
+        header_frame = Frame(self.wind, bg="#2c3e50", pady=15)
+        header_frame.pack(fill="x")
 
-        # Agregar un texto al contenedor
-        texto = "NOMINATOR+"
-        label_texto = Label(text_frame, text=texto, font=('Helvetica', 18, 'bold'))
-        label_texto.grid(row=0, column=0, columnspan=2)
+        label_texto = Label(
+            header_frame,
+            text="GESTIÓN DE NÓMINAS",
+            font=('Helvetica', 20, 'bold'),
+            bg="#2c3e50",
+            fg="white"
+        )
+        label_texto.pack()
 
+        # ---- Imagen ----
         try:
-            img = PhotoImage(file="E:/python/NOMINATOR/nomina.gif")  # Cambia a un formato compatible (.gif)
-            label_img = Label(text_frame, image=img)
-            label_img.grid(row=1, column=0, columnspan=2)  # Mostrar la imagen
-            label_img.image = img  # Guardar una referencia para evitar que la imagen se elimine
+            img = PhotoImage(file="nomina.gif")  # debe estar en misma carpeta
+            label_img = Label(self.wind, image=img, bg="#f0f4f7")
+            label_img.image = img  # evitar que se libere
+            label_img.pack(pady=20)
         except Exception as e:
             print(f"Error al cargar la imagen: {e}")
-            
-        # Crear un contenedor para los botones
-        button_frame = Frame(self.wind, pady=20)  
-        button_frame.grid(row=1, column=0, columnspan=2, pady=10)
 
-        # Configurar las columnas para que se expandan y se centren
-        self.wind.columnconfigure(0, weight=1)
-        self.wind.columnconfigure(1, weight=1)
-            # Puedes personalizar la nueva ventana aquí
+        # ---- Botonera ----
+        button_frame = Frame(self.wind, bg="#f0f4f7")
+        button_frame.pack(pady=20)
 
-        # Boton Ventana ALTA
-        button1 = Button(button_frame, text="ALTAS", command=ventana_altas, height=3, width=25, bg='#FDFD96', fg='black', bd=2, font=('Helvetica', 12, 'bold'))
-        button1.grid(row=0, column=0, padx=5, pady=5)
+        button_style = {
+            "height": 3,
+            "width": 20,
+            "bg": "#3498db",   # azul moderno
+            "fg": "white",
+            "bd": 0,
+            "activebackground": "#2980b9",
+            "activeforeground": "white",
+            "font": ('Helvetica', 12, 'bold'),
+            "relief": "flat"
+        }
+
+        # Boton Ventana ALTAS
+        button1 = Button(button_frame, text="ALTAS", command=ventana_altas, **button_style)
+        button1.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
 
         # Boton Ventana BAJAS
-        button2 = Button(button_frame, text="BAJAS", command=ventana_bajas, height=3, width=25, bg='#FDFD96', fg='black', bd=2, font=('Helvetica', 12, 'bold'))
-        button2.grid(row=0, column=1, padx=5, pady=5)
+        button2 = Button(button_frame, text="BAJAS", command=ventana_bajas, **button_style)
+        button2.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
 
         # Boton Ventana INFORMES
-        button3 = Button(button_frame, text="INFORMES",command=ventana_informes, height=3, width=25, bg='#FDFD96', fg='black', bd=2, font=('Helvetica', 12, 'bold'))
-        button3.grid(row=1, column=0, padx=5, pady=5)
+        button3 = Button(button_frame, text="INFORMES", command=ventana_informes, **button_style)
+        button3.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
 
-        #Boton Ventana NÓMINAS
-        button4 = Button(button_frame, text="NÓMINAS", command=ventana_nominas, height=3, width=25, bg='#FDFD96', fg='black', bd=2, font=('Helvetica', 12, 'bold'))
-        button4.grid(row=1, column=1, padx=5, pady=5)
+        # Boton Ventana NÓMINAS
+        button4 = Button(button_frame, text="NÓMINAS", command=ventana_nominas, **button_style)
+        button4.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
 
+        # Expansión de botones en la cuadrícula
+        button_frame.grid_columnconfigure(0, weight=1)
+        button_frame.grid_columnconfigure(1, weight=1)
 
 
 if __name__ == '__main__':
